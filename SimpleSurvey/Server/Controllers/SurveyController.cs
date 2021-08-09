@@ -43,6 +43,19 @@ namespace SimpleSurvey.Server.Controllers
                     new SurveyAnswer {Option = "Not sure!"},
                     new SurveyAnswer {Option = "Yes"},
                 }
+            },
+            new Survey
+            {
+                Id = Guid.NewGuid(),
+                Title = "How's your mood today?",
+                ExpiresAt = DateTime.Now.AddMinutes(10),
+                Options = new List<string> {"Good :)", "Ok :|", "Bad :("},
+                Answers = new List<SurveyAnswer>
+                {
+                    new SurveyAnswer {Option = "Good :)"},
+                    new SurveyAnswer {Option = "Ok :|"},
+                    new SurveyAnswer {Option = "Bad :("},
+                }
             }
         };
 
