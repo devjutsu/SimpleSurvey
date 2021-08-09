@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SimpleSurvey.Shared
 {
-    public record SurveySummary
+    public record SurveySummary : IExpirable
     {
         public Guid Id { get; init; }
         public string Title { get; init; }

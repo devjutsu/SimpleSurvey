@@ -1,0 +1,61 @@
+﻿@page "/survey-details/{Id:guid}"
+@using Microsoft.AspNetCore.SignalR.Client
+@using SimpleSurvey.Shared
+@implements IAsyncDisposable
+@inject SurveyHttpClient SurveyHttpClient
+@inject HubConnection HubConnection
+
+@if (survey is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <h1>@survey.Title</h1>
+
+    <ul class="list-group mb-4">
+        @foreach (var option in survey.Options)
+        {
+            <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+            @onclick="@(async () => await OnAnswer(option))">
+                @option
+                <span class="badge badge-primary badge-pill">
+                    @(survey.Answers.Where(a => a.Option == option).Count())
+                </span>
+            </button>
+        }
+    </ul>
+    <SurveyExpiration Expirable=survey class="text-right" />
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+    private Survey survey;
+
+    protected override async Task OnInitializedAsync()
+    {
+        survey = await SurveyHttpClient.GetSurvey(Id);
+        await HubConnection.InvokeAsync("JoinSurveyGroup", Id);
+        HubConnection.On<Survey>("SurveyUpdated", survey =>
+            {
+                this.survey = survey;
+                StateHasChanged();
+            });
+    }
+
+    private async Task OnAnswer(string option)
+    {
+        if ((survey as IExpirable).IsExpired)
+            return;
+        else
+            await SurveyHttpClient.Answer(Id, new SurveyAnswer { Option = option });
+
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        HubConnection.Remove("SurveyUpdated");
+        await HubConnection.InvokeAsync("LeaveSurveyGroup", Id);
+    }
+}
