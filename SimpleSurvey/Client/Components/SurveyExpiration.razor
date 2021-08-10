@@ -1,0 +1,36 @@
+﻿@using SimpleSurvey.Shared
+@using System.Threading
+
+<p @attributes="ExtraAttributes">
+    @if(Expirable.IsExpired)
+    {
+        <strong>This survey has expired!</strong>
+    }
+    else
+    {
+        <small class="text-muted">Expires in @Expirable.ExpiresInSec</small>
+    }
+</p>
+
+
+@code {
+    [Parameter]
+    public IExpirable Expirable { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> ExtraAttributes { get; set; }
+
+    private Timer timer;
+
+    protected override void OnInitialized()
+    {
+        timer = new Timer((object stateInfo) =>
+        {
+                StateHasChanged();
+        }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await timer.DisposeAsync();
+    }
+}

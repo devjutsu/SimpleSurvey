@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using SimpleSurvey.Shared
 @using Microsoft.AspNetCore.SignalR.Client
+@using SimpleSurvey.Client.Components
 @inject SurveyHttpClient SurveyHttpClient
 @inject NavigationManager NavigationManager
 @inject HubConnection HubConnection
@@ -8,7 +9,7 @@
 
 <h1>Simple Survey</h1>
 
-<button class="btn btn-primary mb-4" onclick="AddSurvey"><i class="oi oi-plus" />Add Survey</button>
+<button class="btn btn-primary mb-4" @onclick="(() => AddSurvey())"><i class="oi oi-plus" />Add Survey</button>
 
 @if (surveys == null)
 {
@@ -23,6 +24,7 @@ else
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">@survey.Title</h5>
+                        <SurveyExpiration Expirable=survey class="card-text float-right" />
                         <button class="btn btn-link pl-0" @onclick="@(() => GoToSurvey(survey.Id))">View</button>
                     </div>
                 </div>
@@ -39,9 +41,11 @@ else
         surveys = await SurveyHttpClient.GetSurveys();
         HubConnection.On<SurveySummary>("SurveyAdded", survey =>
         {
-            surveys = surveys.Where(s => s.Title != survey.Title)
+            this.surveys = surveys.Where(s => s.Title != survey.Title)
                 .Append(survey)
                 .ToArray();
+
+            StateHasChanged();
         });
     }
 

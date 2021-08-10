@@ -23,7 +23,7 @@ namespace SimpleSurvey.Shared
             => await _http.GetFromJsonAsync<Survey>($"api/survey/{id}");
 
         public async Task<HttpResponseMessage> Add(AddSurveyModel model)
-            => await _http.PutAsJsonAsync<AddSurveyModel>("api/survey/add", model);
+            => await _http.PutAsJsonAsync<AddSurveyModel>("api/survey", model);
 
         public async Task<HttpResponseMessage> Answer(Guid id, SurveyAnswer answer)
             => await _http.PostAsJsonAsync<SurveyAnswer>($"api/survey/{id}/answer", answer);

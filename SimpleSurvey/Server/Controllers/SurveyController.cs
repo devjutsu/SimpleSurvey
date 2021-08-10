@@ -21,7 +21,7 @@ namespace SimpleSurvey.Server.Controllers
             {
                 Id = Guid.NewGuid(),
                 Title = "Are you satisfied with Blazor?",
-                ExpiresAt = DateTime.Now.AddYears(1),
+                ExpiresAt = DateTime.Now.AddHours(1),
                 Options = new List<string> {"Very much!", "Yes", "Not sure", "No", "It's a crap!"},
                 Answers = new List<SurveyAnswer>
                 {
@@ -35,7 +35,7 @@ namespace SimpleSurvey.Server.Controllers
             {
                 Id = Guid.NewGuid(),
                 Title = "Are you happy with SignalR?",
-                ExpiresAt = DateTime.Now.AddYears(1),
+                ExpiresAt = DateTime.Now.AddMinutes(5),
                 Options = new List<string> {"Very much!", "Yes", "Not sure", "No", "It's a crap!"},
                 Answers = new List<SurveyAnswer>
                 {
@@ -48,7 +48,7 @@ namespace SimpleSurvey.Server.Controllers
             {
                 Id = Guid.NewGuid(),
                 Title = "How's your mood today?",
-                ExpiresAt = DateTime.Now.AddMinutes(10),
+                ExpiresAt = DateTime.Now.AddMinutes(1),
                 Options = new List<string> {"Good :)", "Ok :|", "Bad :("},
                 Answers = new List<SurveyAnswer>
                 {
@@ -64,7 +64,7 @@ namespace SimpleSurvey.Server.Controllers
             _hub = hub;
         }
 
-        [HttpGet]
+        [HttpGet()]
         public IEnumerable<SurveySummary> GetSurveys()
         {
             return surveys.Select(s => s.ToSummary());
@@ -85,9 +85,11 @@ namespace SimpleSurvey.Server.Controllers
         {
             var survey = new Survey
             {
+                Id = Guid.NewGuid(),
                 Title = model.Title,
                 ExpiresAt = DateTime.Now.AddMinutes(model.Minutes.Value),
-                Options = model.Options.Select(o => o.OptionValue).ToList()
+                Options = model.Options.Select(o => o.OptionValue).ToList(),
+                Answers = new List<SurveyAnswer>()
             };
             surveys.Add(survey);
             await _hub.Clients.All.SurveyAdded(survey.ToSummary());
@@ -100,6 +102,9 @@ namespace SimpleSurvey.Server.Controllers
         {
             var survey = surveys.SingleOrDefault(t => t.Id == surveyId);
             if (survey == null) return NotFound();
+            else if((survey as IExpirable).IsExpired) return StatusCode(400, "Has expired");
+
+
             survey.Answers.Add(new SurveyAnswer
             {
                 SurveyId = surveyId,
